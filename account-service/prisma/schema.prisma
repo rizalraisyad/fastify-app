@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentAccountType {
+DEBT
+CREDIT
+}
+
+enum PaymentStatus {
+SUCCESS
+FAILED
+PENDING
+}
+
+model User {
+  id String @id @default(cuid())
+  username String @unique
+  name String
+  password String
+  salt String
+  paymentAccount PaymentAccount[]
+}
+
+model PaymentAccount {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name String
+  codePayment String
+  type PaymentAccountType
+  owner User @relation(fields: [userId], references: [id])
+  userId String
+  source Transaction[] @relation("source")
+  destination Transaction[] @relation("destination")
+}
+
+model Transaction {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  amount Float
+  settledAt DateTime?
+  source PaymentAccount @relation(fields: [baseAccount], references: [id], name: "source")
+  baseAccount String
+  destination PaymentAccount @relation(fields: [destionationAccount], references: [id], name: "destination")
+  destionationAccount String
+  status PaymentStatus
+}
