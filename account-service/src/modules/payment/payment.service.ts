@@ -1,6 +1,7 @@
 import { Transaction } from "@prisma/client";
 import prisma from "../../utils/prisma";
 import { PaymentSendInput, PaymentWithdrawInput} from "./payment.schema";
+const axios = require('axios');
 
 async function createTransaction(input:PaymentSendInput) {
   return await prisma.transaction.create({
@@ -14,26 +15,32 @@ async function createTransaction(input:PaymentSendInput) {
 }
 
 async function createPaymentTransaction(input:PaymentSendInput) {
-  var request = require('request');
-  var options = {
-    'method': 'POST',
-    'url': 'http://localhost:3001/api/payment/send',
-    'headers': {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      "ammount": input.ammount,
-      "base": input.baseAccount,
-      "destination": input.destinationAccount
-    })
+let data = JSON.stringify({
+  "ammount": input.ammount,
+  "base": input.baseAccount,
+  "destination": input.destinationAccount
+});
 
+let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: 'http://localhost:3001/api/payment/send',
+    headers: { 
+      'Content-Type': 'application/json', 
+    },
+    data : data
   };
-  const res = await request(options, function (error: any, response: any) {
-    if (error) return error;
-    return response.body;
+
+const res = await axios.request(config)
+  .then((response: any) => {
+    console.log(JSON.stringify(response.data));
+    return response.data
+  })
+  .catch((error: any) => {
+    return error
   });
-  
-  return res;
+  console.log(res)
+return res
 }
 
 async function updateTransaction(input:Transaction, status: boolean) {
